@@ -21,7 +21,8 @@ def main_crawler(query,s_date, e_date, news_office, maxpage, sort, printed):
         #print(s_date)
         y,m,d = s_date.split(".")
         first_date = "%s%s%s000000"%(y,m,d)
-        crawler(query, first_date, first_date, news_office, maxpage, sort, printed, wr)
+        second_date = "%s%s%s235959"%(y,m,d)
+        crawler(query, first_date, second_date, news_office, maxpage, sort, printed, wr)
         today = datetime(int(y),int(m),int(d))
         next_day = today + timedelta(days=1)
         ny, nm, nd = next_day.year,next_day.month,next_day.day
@@ -33,13 +34,15 @@ def crawler(query, s_date, e_date, pcompany, maxpage, sort, printed, wr):
     pre_article = ""
     article = ""
     page =1
-    while page < maxpage:
+    check = True
+    while (page < maxpage and check):
         url = "https://search.daum.net/search?w=news&DA=STC&enc=utf8&cluster=y&cluster_page=1&q=" + \
         query + "&cp=1643iWOgL7_L3uY84L,16GnI7O0bgWGPu8g3q,166uA3-wXI9pkYJd1q,16NFZtGOil_tXN93-m&cpname=" + \
-        pcompany + "&p="+str(page)+"&period=u&sd="+sdate+ "&ed="+edate+"&sort=old"
+        pcompany + "&p="+str(page)+"&period=u&sd="+s_date+ "&ed="+e_date+"&sort=old"
         header = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
             }
+        print(url)
         req = requests.get(url,headers=header)
         cont = req.content
         soup = BeautifulSoup(cont, 'html.parser')
@@ -48,15 +51,20 @@ def crawler(query, s_date, e_date, pcompany, maxpage, sort, printed, wr):
         news_tit  =soup.select("a.tit_main.fn_tit_u")
         for news_number, urls in enumerate(news_tit):
             article=urls['href']
+            print(article)
             print(article,pre_article,news_number)
             if (news_number == 0 and pre_article == article):
+                check = False
                 break
             elif news_number == 0 and pre_article != article:
                 pre_article = article
             pcompany = soup.select("span.f_nb")[news_number*2].text
             pdate = soup.select("span.f_nb")[news_number*2+1].text
-            
-            news_detail = newscompany_crwal(article,pcompany, pdate)
+            try:
+                news_detail = newscompany_crwal(article,pcompany, pdate)
+            except Exception as e:
+                print(e)
+                break
             wr.writerow(news_detail)
         page+=1
 
@@ -129,7 +137,7 @@ def kidokin(article, pcompany, pdate):
 
     # 제목 파싱 
     title = bsoup.select("#menuPos > table:nth-of-type(8) > tbody > tr > td:nth-of-type(2) > table > tbody > tr > td > div.sub_top_article_24px")[0].text
-    subtitle = bsoup.select("#menuPos > table:nth-child(8) > tbody > tr > td:nth-child(2) > table > tbody > tr > td > div.normal_15px_bold")[0].text
+    subtitle = bsoup.select("#menuPos > table:nth-of-type(8) > tbody > tr > td:nth-of-type(2) > table > tbody > tr > td > div.normal_15px_bold")[0].text
     news_detail.append(title+" "+subtitle) 
     
     # 기사 본문 크롤링 
@@ -196,7 +204,7 @@ def kidok(article, pcompany, pdate):
     news_detail.append(pdate) 
 
     # 기자 파싱
-    journalist = bsoup.select("#user-container > div.view-default3.float-center.max-width-1200 > header > section > div.info-text > ul > li:nth-of-child(1)")[0].text.strip()
+    journalist = bsoup.select("#user-container > div.view-default3.float-center.max-width-1200 > header > section > div.info-text > ul > li:nth-of-type(1)")[0].text.strip()
     news_detail.append(journalist) 
 
     # 신문사 크롤링
