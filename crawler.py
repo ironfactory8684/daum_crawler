@@ -12,10 +12,10 @@ def main_crawler(query,s_date, e_date, news_office, maxpage, sort, printed):
     today = datetime(int(y),int(m),int(d))
     endday = datetime(int(ey),int(em),int(ed))
     file_path = "./" + query.replace(" ","_")  + '.csv'
-    # f = open(file_path, 'a', encoding='utf-8', newline='')
-    # wr=csv.writer(f)
-    # wr.writerow(["날짜","기자","신문사","제목","내용","댓글갯수","댓글내용","기사_주소"])
-    #print(s_date, endday)
+    f = open(file_path, 'a', encoding='utf-8', newline='')
+    wr=csv.writer(f)
+    wr.writerow(["날짜","기자","신문사","제목","내용","댓글갯수","댓글내용","기사_주소"])
+    print("%s로 크롤링을 시작합니다"%query)
 
     while today <endday:
         #print(s_date)
